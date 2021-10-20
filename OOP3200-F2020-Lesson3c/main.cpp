@@ -1,11 +1,13 @@
 #include <iomanip>
 #include <iostream>
+#include <map>
+#include <fstream>
+#include <cstdlib>
 
 #include <vector>
 
 #include "GameObject.h"
 #include "Vector3D.h"
-#include <map>
 
 
 static void BuildGameObjects(std::vector<GameObject*>& game_objects, const int num = 2)
@@ -48,15 +50,86 @@ static void CompareGameObjects(GameObject* object1, GameObject* object2)
 	std::cout << object2->ToString() << std::endl;
 }
 
+void PrintGameObjects(const std::map<std::string, GameObject*>& gameObjects)
+{
+	std::cout << "=================================" << std::endl;
+	std::cout << "Output map of Game Objects" << std::endl;
+	std::cout << "=================================" << std::endl;
 
+	// For every game object in GameObjects....loop
+	for (const auto& game_object : gameObjects)
+	{
+		std::cout << "Key  : " << game_object.first << std::endl;
+		std::cout << "---------------------------------" << std::endl;
+		std::cout << game_object.second->ToString() << std::endl;
+		std::cout << "---------------------------------" << std::endl;
+	}
+
+}
 
 int main()
 {
 	// Map is made up of key value pairs - here a key of string and value of GameObject
-	std::map<std::string, GameObject> gameObjects;
+	std::map<std::string, GameObject*> gameObjects;
+
+	auto* ship = new GameObject("Ship", 0, 3.0f, 4.0f);
+	auto* enemy = new GameObject("Enemy", 1, 10.0f, 20.0f);
+
+	gameObjects[ship->GetName()] = ship;
+	gameObjects[enemy->GetName()] = enemy;
+	
+	PrintGameObjects(gameObjects);
+
+	auto distance = Vector2D<float>::Distance(gameObjects["Ship"]->GetPosition(), gameObjects["Enemy"]->GetPosition());
+
+	std::cout << "Distance between " << gameObjects["Ship"]->GetName()
+		<< " and " << gameObjects["Enemy"]->GetName() << "is " << std::to_string(distance) << std::endl;
+
+	std::ofstream outfile("GameObjects.txt", std::ios::out);
+	outfile << gameObjects["Ship"]->ToFile() << std::endl;
+	outfile << gameObjects["Enemy"]->ToFile() << std::endl;
+	outfile.close();
+
+	std::cout << "-----------------------------------------------------------------------------------------------------------------\n";
+	std::cout << " END OF OUTPUT \n";
+	std::cout << "-----------------------------------------------------------------------------------------------------------------\n";
+
+	std::cout << "-----------------------------------------------------------------------------------------------------------------\n";
+	std::cout << " STARTING INPUT \n";
+	std::cout << "-----------------------------------------------------------------------------------------------------------------\n";
 
 
 
+	std::ifstream infile;
+	std::string fileName = "GameObjects.txt";
+
+	infile.open(fileName.c_str());
+
+	while (infile.is_open())
+	{
+		int id = 0;
+		float x, y = 0.0f;
+		std::string name;
+
+		while (!infile.fail())
+		{
+			infile >> id >> name;
+			infile.ignore(1, ' ');
+			infile.ignore(1, '(');
+			infile >> x;
+			infile.ignore(1, ',');
+			infile.ignore(1, ' ');
+			infile >> y;
+			infile.ignore(1, ')');
+
+			auto* tempObject = new GameObject(name, id, x, y);
+
+			gameObjects[name + "1"] = tempObject;
+		}
+		infile.close();
+	}
+	
+	PrintGameObjects(gameObjects);
 
 	//std::vector<GameObject*> gameObjects;
 
